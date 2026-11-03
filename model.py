@@ -47,7 +47,6 @@ FEATURE_LABELS_FA = {
 
 DATA_PATH = Path(__file__).resolve().parent / "data" / "breast_cancer.csv"
 
-
 def load_dataset(path=DATA_PATH):
     """
     اگر فایل CSV وجود داشت می‌خواند، در غیر این صورت از sklearn دانلود می‌کند.
@@ -68,7 +67,6 @@ def load_dataset(path=DATA_PATH):
         features = data.data[:, :10] 
         target = data.target
         return features, target
-
 
 X, y = load_dataset()
 
