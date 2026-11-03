@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>سامانه آموزشی هوش مصنوعی پزشکی</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="hero">
+    <div class="container">
+      <div class="eyebrow">پروژه دانشگاهی • یادگیری ماشین</div>
+      <h1>سامانه آموزشی هوش مصنوعی پزشکی</h1>
+      <p>نمایش نمونه‌ای از تحلیل داده‌های پزشکی با استفاده از مدل یادگیری ماشین</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="warning" role="note">
+      <strong>هشدار مهم:</strong>
+      این ابزار صرفاً آموزشی است و تشخیص پزشکی ارائه نمی‌کند. از آن برای تصمیم‌گیری درمانی یا ارزیابی بیمار واقعی استفاده نکنید.
+    </section>
+
+    <section class="panel">
+      <h2>ورود ویژگی‌های نمونه</h2>
+      <p class="muted">مقادیر زیر باید با تعریف ویژگی‌های مجموعه‌داده آموزشی یکسان باشند. این فرم برای تمرین دانشگاهی است، نه ورود اطلاعات بیمار. زیر هر فیلد، بازه‌ی مقادیر موجود در داده‌ی آموزشی نوشته شده است.</p>
+
+      <div class="examples">
+        <span class="muted">پر کردن خودکار با نمونه‌ی واقعی از مجموعه‌داده:</span>
+        {% for key, ex in examples.items() %}
+        <button type="button" class="secondary" data-example="{{ key }}">{{ ex.label }}</button>
+        {% endfor %}
+      </div>
+
+      {% if error %}
+        <div class="alert" role="alert">{{ error }}</div>
+      {% endif %}
+      <form method="post" id="sample-form">
+        <div class="fields">
+          {% for name in feature_names %}
+          <label>
+            <span>{{ labels[name] }}</span>
+            <input type="number" step="any" min="0" name="{{ name }}"
+                   value="{{ values.get(name, '') }}"
+                   placeholder="{{ '%.4g'|format(ranges[name].mean) }}" required>
+            <small class="hint">بازه‌ی داده‌ی آموزشی: {{ '%.4g'|format(ranges[name].min) }} تا {{ '%.4g'|format(ranges[name].max) }}</small>
+          </label>
+          {% endfor %}
+        </div>
+        <button type="submit">اجرای مدل آزمایشی</button>
+      </form>
+    </section>
+
+    {% if result %}
+    <section class="panel result">
+      <h2>خروجی مدل (صرفاً آموزشی)</h2>
+      {% if warnings %}
+      <div class="alert-warn" role="alert">
+        <strong>توجه:</strong>
+        <ul>
+          {% for w in warnings %}<li>{{ w }}</li>{% endfor %}
+        </ul>
+      </div>
+      {% endif %}
+      <p class="result-label">برچسب پیش‌بینی‌شده در مدل: <strong>{{ result.label }}</strong></p>
+      <div class="probabilities">
+        <div><span>خوش‌خیم</span><strong>{{ result.benign_probability }}٪</strong></div>
+        <div><span>بدخیم</span><strong>{{ result.malignant_probability }}٪</strong></div>
+      </div>
+      <p class="muted">دقت مدل در یک بخش آزمون داخلی: {{ result.accuracy }}٪. این عدد فقط به همین تقسیم‌بندی داده مربوط است و کیفیت تشخیص در دنیای واقعی را نشان نمی‌دهد.</p>
+      <p class="warning small">خروجی مدل جایگزین نظر پزشک، آزمایش‌های تکمیلی یا تشخیص تخصصی نیست.</p>
+    </section>
+    {% endif %}
+
+    <section class="panel">
+      <h2>ارزیابی مدل روی داده‌ی آزمون</h2>
+      <p class="muted">{{ metrics.n_test }} نمونه برای آزمون کنار گذاشته شده است. کلاس «بدخیم» به‌عنوان کلاس مثبت در نظر گرفته شده است.</p>
+      <div class="table-wrap">
+        <table class="cm">
+          <thead>
+            <tr><th></th><th>پیش‌بینی: بدخیم</th><th>پیش‌بینی: خوش‌خیم</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>واقعی: بدخیم</th><td>{{ metrics.confusion_matrix[0][0] }}</td><td>{{ metrics.confusion_matrix[0][1] }}</td></tr>
+            <tr><th>واقعی: خوش‌خیم</th><td>{{ metrics.confusion_matrix[1][0] }}</td><td>{{ metrics.confusion_matrix[1][1] }}</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="probabilities metrics">
+        <div><span>دقت (Accuracy)</span><strong>{{ '%.1f'|format(metrics.accuracy * 100) }}٪</strong></div>
+        <div><span>Precision (بدخیم)</span><strong>{{ '%.1f'|format(metrics.precision_malignant * 100) }}٪</strong></div>
+        <div><span>Recall (بدخیم)</span><strong>{{ '%.1f'|format(metrics.recall_malignant * 100) }}٪</strong></div>
+        <div><span>F1 (بدخیم)</span><strong>{{ '%.1f'|format(metrics.f1_malignant * 100) }}٪</strong></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>درباره پروژه</h2>
+      <ul>
+        <li>زبان برنامه‌نویسی: Python</li>
+        <li>چارچوب وب: Flask</li>
+        <li>مدل: رگرسیون لجستیک با استانداردسازی ویژگی‌ها</li>
+        <li>داده: مجموعه‌داده عمومی Wisconsin Diagnostic Breast Cancer (فایل data/breast_cancer.csv)</li>
+        <li>اطلاعات فرم در پایگاه داده ذخیره نمی‌شود.</li>
+      </ul>
+    </section>
+  </main>
+  <footer><div class="container">پروژه آموزشی دانشگاهی • هوش مصنوعی در پزشکی</div></footer>
+
+  <script>
+    const EXAMPLES = {{ examples|tojson }};
+    document.querySelectorAll('[data-example]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        const values = EXAMPLES[btn.dataset.example].values;
+        Object.keys(values).forEach(function (name) {
+          const input = document.querySelector('input[name="' + name + '"]');
+          if (input) { input.value = values[name]; }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
