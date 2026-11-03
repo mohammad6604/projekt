@@ -49,17 +49,25 @@ DATA_PATH = Path(__file__).resolve().parent / "data" / "breast_cancer.csv"
 
 
 def load_dataset(path=DATA_PATH):
-    """Read the CSV and return (X, y) using only the 10 'mean' features.
-
-    The 'target' column is 0 = malignant, 1 = benign (same coding as scikit-learn).
     """
-    if not Path(path).exists():
-        raise FileNotFoundError(f"Dataset file not found: {path}")
-    with open(path, newline="", encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
-    features = np.array([[float(r[name]) for name in FEATURE_NAMES] for r in rows])
-    target = np.array([int(r["target"]) for r in rows])
-    return features, target
+    اگر فایل CSV وجود داشت می‌خواند، در غیر این صورت از sklearn دانلود می‌کند.
+    """
+    # ۱. اگر فایل روی سیستم شما یا سرور بود، همان را می‌خواند
+    if Path(path).exists():
+        with open(path, newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        features = np.array([[float(r[name]) for name in FEATURE_NAMES] for r in rows])
+        target = np.array([int(r["target"]) for r in rows])
+        return features, target
+        
+    # ۲. اگر فایل نبود (مثل سرور Render)، از sklearn می‌گیرد
+    else:
+        from sklearn.datasets import load_breast_cancer
+        data = load_breast_cancer()
+        # فقط ۱۰ ویژگی 'mean' را برمی‌داریم تا با FEATURE_NAMES هماهنگ باشد
+        features = data.data[:, :10] 
+        target = data.target
+        return features, target
 
 
 X, y = load_dataset()
